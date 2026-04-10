@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Time Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #181a24;
+    --surface-hover: #1e2130;
+    --border: #2a2d3e;
+    --border-focus: #5b6eef;
+    --text: #e4e5ea;
+    --text-muted: #8b8fa3;
+    --text-dim: #5d6178;
+    --accent: #5b6eef;
+    --accent-glow: rgba(91, 110, 239, 0.15);
+    --danger: #ef5b5b;
+    --success: #4ecb8d;
+    --radius: 8px;
+    --radius-lg: 12px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 24px;
+    line-height: 1.5;
+  }
+
+  .header {
+    max-width: 1200px;
+    margin: 0 auto 28px;
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 16px;
+  }
+  .header-left { display: flex; align-items: center; gap: 14px; }
+  .logo {
+    width: 40px; height: 40px;
+    background: linear-gradient(135deg, var(--accent), #8b6eef);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; font-weight: 700; color: white;
+    box-shadow: 0 4px 16px rgba(91,110,239,0.3);
+  }
+  .header h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; }
+  .header-right { display: flex; align-items: center; gap: 10px; }
+
+  .total-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px; font-weight: 500;
+    padding: 8px 16px;
+    background: var(--accent-glow);
+    border: 1px solid rgba(91,110,239,0.3);
+    border-radius: var(--radius); color: var(--accent);
+  }
+  .btn-header {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px; font-weight: 600;
+    padding: 8px 16px; border-radius: var(--radius);
+    border: 1px solid var(--border);
+    cursor: pointer; transition: all 0.15s;
+    background: var(--surface); color: var(--text);
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .btn-header:hover { background: var(--surface-hover); border-color: var(--accent); }
+  .btn-header.danger { color: var(--danger); border-color: rgba(239,91,91,0.3); background: transparent; }
+  .btn-header.danger:hover { background: rgba(239,91,91,0.08); border-color: var(--danger); }
+
+  .categories { max-width: 1200px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+
+  .category-row {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+
+  .category-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 20px;
+  }
+  .category-header-left { display: flex; align-items: center; gap: 12px; }
+  .cat-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .category-name { font-size: 15px; font-weight: 600; }
+  .category-header-right { display: flex; align-items: center; gap: 12px; }
+  .cat-hours {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px; color: var(--text-muted);
+  }
+  .cat-hours strong { color: var(--text); font-weight: 600; }
+
+  .btn-add-entry {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px; font-weight: 600;
+    padding: 5px 14px;
+    background: rgba(91,110,239,0.12);
+    color: var(--accent);
+    border: 1px solid rgba(91,110,239,0.25);
+    border-radius: 6px;
+    cursor: pointer; transition: all 0.15s; white-space: nowrap;
+  }
+  .btn-add-entry:hover { background: rgba(91,110,239,0.22); border-color: var(--accent); }
+
+  .entries-wrap { padding: 0 20px 14px; }
+
+  .entries-table { width: 100%; border-collapse: collapse; }
+  .entries-table th {
+    font-size: 10px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.6px;
+    color: var(--text-dim); text-align: left;
+    padding: 0 10px 8px; border-bottom: 1px solid var(--border);
+  }
+  .entries-table th:last-child { text-align: right; }
+  .entries-table td {
+    padding: 9px 10px; font-size: 13px;
+    border-bottom: 1px solid rgba(42,45,62,0.4);
+    vertical-align: middle;
+  }
+  .entries-table tr:last-child td { border-bottom: none; }
+  .entries-table tr:hover td { background: rgba(255,255,255,0.015); }
+
+  .date-cell {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px; color: var(--text-muted);
+    white-space: nowrap; width: 100px;
+  }
+  .hours-cell {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px; font-weight: 600; width: 65px;
+  }
+  .desc-cell { color: var(--text); }
+  .actions-cell { text-align: right; white-space: nowrap; width: 70px; }
+
+  .btn-icon {
+    background: none; border: none; cursor: pointer;
+    padding: 5px; border-radius: 4px;
+    transition: all 0.15s; color: var(--text-muted);
+    display: inline-flex; align-items: center; justify-content: center;
+    opacity: 0;
+  }
+  .entries-table tr:hover .btn-icon { opacity: 1; }
+  .btn-icon:hover { color: var(--text); background: rgba(255,255,255,0.08); }
+  .btn-icon.delete { color: var(--danger); }
+  .btn-icon.delete:hover { color: #ff7070; background: rgba(239,91,91,0.1); }
+
+  .empty-state {
+    text-align: center; padding: 16px;
+    color: var(--text-dim); font-size: 13px; font-style: italic;
+  }
+
+  /* Modal shared */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(4px);
+    display: none; align-items: center; justify-content: center;
+    z-index: 1000; opacity: 0; transition: opacity 0.2s;
+  }
+  .modal-overlay.open { display: flex; opacity: 1; }
+
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px 32px;
+    width: 440px; max-width: 92vw;
+    box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+    transform: translateY(12px); transition: transform 0.2s;
+  }
+  .modal-overlay.open .modal { transform: translateY(0); }
+
+  .modal-title {
+    font-size: 17px; font-weight: 700;
+    margin-bottom: 6px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .modal-subtitle { font-size: 13px; color: var(--text-muted); margin-bottom: 24px; }
+
+  .modal-field { margin-bottom: 18px; }
+  .modal-field label {
+    display: block; font-size: 11px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.5px;
+    color: var(--text-muted); margin-bottom: 6px;
+  }
+  .modal-field input, .modal-field textarea, .modal-field select {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px; padding: 10px 14px; width: 100%;
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 8px; color: var(--text); outline: none;
+    transition: border-color 0.15s;
+  }
+  .modal-field input:focus, .modal-field textarea:focus, .modal-field select:focus {
+    border-color: var(--border-focus);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+  }
+  .modal-field input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(0.7); cursor: pointer;
+  }
+  .modal-field textarea { resize: vertical; min-height: 80px; }
+
+  .modal-row { display: flex; gap: 14px; }
+  .modal-row .modal-field { flex: 1; }
+
+  .modal-actions {
+    display: flex; justify-content: flex-end; gap: 10px;
+    margin-top: 24px; padding-top: 18px;
+    border-top: 1px solid var(--border);
+  }
+  .btn-modal {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px; font-weight: 600;
+    padding: 10px 24px; border-radius: 8px;
+    border: none; cursor: pointer; transition: all 0.15s;
+  }
+  .btn-modal.primary { background: var(--accent); color: white; }
+  .btn-modal.primary:hover { background: #6e7ff5; box-shadow: 0 4px 12px rgba(91,110,239,0.3); }
+  .btn-modal.secondary { background: transparent; color: var(--text-muted); border: 1px solid var(--border); }
+  .btn-modal.secondary:hover { border-color: var(--text-muted); color: var(--text); }
+  .btn-modal.danger { background: transparent; color: var(--danger); border: 1px solid rgba(239,91,91,0.3); }
+  .btn-modal.danger:hover { background: rgba(239,91,91,0.08); border-color: var(--danger); }
+
+  /* Manage categories modal */
+  .manage-modal { width: 520px; max-height: 85vh; display: flex; flex-direction: column; }
+  .manage-modal .modal-body { overflow-y: auto; flex: 1; }
+
+  .cat-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+  .cat-list-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    transition: border-color 0.15s;
+  }
+  .cat-list-item:hover { border-color: rgba(91,110,239,0.3); }
+
+  .cat-list-dot {
+    width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0;
+    cursor: pointer; position: relative;
+  }
+
+  .cat-list-name {
+    flex: 1; font-size: 14px; font-weight: 500;
+    background: none; border: none; color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    outline: none; padding: 2px 4px; border-radius: 4px;
+    transition: background 0.15s;
+  }
+  .cat-list-name:focus { background: rgba(255,255,255,0.05); }
+
+  .cat-list-count {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; color: var(--text-dim);
+    white-space: nowrap;
+  }
+
+  .cat-list-btn {
+    background: none; border: none; cursor: pointer;
+    padding: 4px; border-radius: 4px;
+    color: var(--text-dim); transition: all 0.15s;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .cat-list-btn:hover { color: var(--text); background: rgba(255,255,255,0.06); }
+  .cat-list-btn.del { color: var(--danger); }
+  .cat-list-btn.del:hover { color: #ff7070; background: rgba(239,91,91,0.1); }
+
+  .add-cat-row {
+    display: flex; gap: 8px; align-items: center;
+    padding-top: 12px; border-top: 1px solid var(--border);
+  }
+  .add-cat-input {
+    flex: 1; font-family: 'DM Sans', sans-serif;
+    font-size: 13px; padding: 8px 12px;
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 6px; color: var(--text); outline: none;
+    transition: border-color 0.15s;
+  }
+  .add-cat-input:focus { border-color: var(--border-focus); box-shadow: 0 0 0 3px var(--accent-glow); }
+  .add-cat-input::placeholder { color: var(--text-dim); }
+
+  .btn-add-cat {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px; font-weight: 600;
+    padding: 8px 16px;
+    background: var(--accent); color: white;
+    border: none; border-radius: 6px;
+    cursor: pointer; transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .btn-add-cat:hover { background: #6e7ff5; }
+
+  /* Color picker grid */
+  .color-picker-popup {
+    position: absolute; top: 100%; left: 0;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 8px;
+    display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px;
+    box-shadow: 0 12px 32px rgba(0,0,0,0.4);
+    z-index: 10;
+  }
+  .color-swatch {
+    width: 24px; height: 24px; border-radius: 50%;
+    border: 2px solid transparent; cursor: pointer;
+    transition: all 0.15s;
+  }
+  .color-swatch:hover { transform: scale(1.2); }
+  .color-swatch.active { border-color: white; }
+
+  .toast {
+    position: fixed; bottom: 24px; right: 24px;
+    padding: 12px 20px;
+    background: var(--surface); border: 1px solid var(--success);
+    border-radius: var(--radius);
+    font-size: 13px; font-weight: 500; color: var(--success);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+    transform: translateY(80px); opacity: 0;
+    transition: all 0.3s ease; z-index: 1100;
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+
+  @media (max-width: 640px) {
+    body { padding: 12px; }
+    .header { flex-direction: column; align-items: flex-start; }
+    .category-header { flex-direction: column; align-items: flex-start; gap: 8px; }
+    .category-header-right { width: 100%; justify-content: space-between; }
+    .modal { padding: 20px 22px; }
+    .modal-row { flex-direction: column; gap: 0; }
+    .manage-modal { width: 95vw; }
+    .entries-table .desc-cell { max-width: 120px; word-wrap: break-word; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <div class="logo">T</div>
+    <h1>Time Tracker</h1>
+  </div>
+  <div class="header-right">
+    <div class="total-badge" id="totalBadge">0 hrs total</div>
+    <button class="btn-header" onclick="openManageModal()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg> Categories</button>
+    <button class="btn-header" onclick="copyAll()">📋 Copy All</button>
+    <button class="btn-header danger" onclick="clearAll()">Clear All</button>
+  </div>
+</div>
+
+<div class="categories" id="categories"></div>
+
+<!-- Entry modal -->
+<div class="modal-overlay" id="entryModalOverlay" onclick="if(event.target===this)closeEntryModal()">
+  <div class="modal">
+    <div class="modal-title">
+      <span class="cat-dot" id="modalDot"></span>
+      <span id="modalTitle">Add Entry</span>
+    </div>
+    <div class="modal-subtitle" id="modalSubtitle"></div>
+    <div class="modal-row">
+      <div class="modal-field">
+        <label for="modalDate">Date</label>
+        <input type="date" id="modalDate">
+      </div>
+      <div class="modal-field">
+        <label for="modalHours">Hours</label>
+        <input type="number" id="modalHours" min="0.25" step="0.25" placeholder="0.0">
+      </div>
+    </div>
+    <div class="modal-field">
+      <label for="modalDesc">Description</label>
+      <textarea id="modalDesc" placeholder="What did you work on?"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-modal secondary" onclick="closeEntryModal()">Cancel</button>
+      <button class="btn-modal primary" id="modalSaveBtn" onclick="saveEntryModal()">Add Entry</button>
+    </div>
+  </div>
+</div>
+
+<!-- Manage categories modal -->
+<div class="modal-overlay" id="manageModalOverlay" onclick="if(event.target===this)closeManageModal()">
+  <div class="modal manage-modal">
+    <div class="modal-title">Manage Categories</div>
+    <div class="modal-subtitle">Rename, recolor, delete, or add categories</div>
+    <div class="modal-body">
+      <div class="cat-list" id="catList"></div>
+      <div class="add-cat-row">
+        <input type="text" class="add-cat-input" id="newCatInput" placeholder="New category name..." maxlength="50">
+        <button class="btn-add-cat" onclick="addCategory()">+ Add</button>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-modal primary" onclick="closeManageModal()">Done</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const COLOR_PALETTE = [
+  '#5b6eef','#e8a13a','#4ecb8d','#cb6ee6','#3ec9d6',
+  '#ef5b8b','#8bae4e','#8b8fa3','#f06040','#a78bfa',
+  '#e05252','#2eaadc','#d4a843','#6cc070','#e17ecf',
+  '#4a90d9','#c9853a','#57c4a7','#9b6def','#d66b6b',
+  '#3b8a6e','#c4a6e0','#7ea6e0','#e0c95b','#6fd1b5',
+  '#d98c5f','#5f8dd3','#b8e05c','#e077a0','#8fd4ef',
+];
+
+const DEFAULT_CATEGORIES = [
+  { id: 'research',      name: 'Issue Research',               color: '#5b6eef' },
+  { id: 'meetings',      name: 'Meetings',                     color: '#e8a13a' },
+  { id: 'support',       name: 'Support',                      color: '#4ecb8d' },
+  { id: 'review',        name: 'Item Review',                  color: '#cb6ee6' },
+  { id: 'requirements',  name: 'Requirements / Rules',         color: '#3ec9d6' },
+  { id: 'deployments',   name: 'Deployments / Infrastructure', color: '#ef5b8b' },
+  { id: 'training',      name: 'Training',                     color: '#8bae4e' },
+  { id: 'uncategorized', name: 'Uncategorized',                color: '#8b8fa3' },
+];
+
+let categories = [];
+let data = {};
+let entryModalState = { mode: 'add', catId: null, entryId: null };
+let openColorPicker = null;
+
+function loadCategories() {
+  try {
+    const s = localStorage.getItem('timeTrackerCategories');
+    categories = s ? JSON.parse(s) : JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
+  } catch { categories = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES)); }
+}
+function saveCategories() {
+  try { localStorage.setItem('timeTrackerCategories', JSON.stringify(categories)); } catch {}
+}
+
+function loadData() {
+  try { const s = localStorage.getItem('timeTrackerData'); data = s ? JSON.parse(s) : {}; } catch { data = {}; }
+  categories.forEach(c => { if (!data[c.id]) data[c.id] = []; });
+}
+function saveData() { try { localStorage.setItem('timeTrackerData', JSON.stringify(data)); } catch {} }
+
+function todayStr() {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+function formatDate(s) { if (!s) return ''; const [y,m,d] = s.split('-'); return `${m}/${d}/${y}`; }
+function escapeHtml(s) { return s ? s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;') : ''; }
+function generateId() { return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+function getCatHours(id) { return (data[id]||[]).reduce((s,e) => s + (parseFloat(e.hours)||0), 0); }
+function fmtHours(n) { n = parseFloat(n); return n % 1 === 0 ? String(n) : parseFloat(n.toFixed(2)).toString(); }
+function getTotalHours() { return categories.reduce((s,c) => s + getCatHours(c.id), 0); }
+function updateTotalBadge() { document.getElementById('totalBadge').textContent = fmtHours(getTotalHours()) + ' hrs total'; }
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// ── Entry modal ──
+function openAddModal(catId) {
+  const cat = categories.find(c => c.id === catId);
+  entryModalState = { mode: 'add', catId, entryId: null };
+  document.getElementById('modalTitle').textContent = 'Add Entry';
+  document.getElementById('modalSubtitle').textContent = cat.name;
+  document.getElementById('modalDot').style.background = cat.color;
+  document.getElementById('modalDate').value = todayStr();
+  document.getElementById('modalHours').value = '';
+  document.getElementById('modalDesc').value = '';
+  document.getElementById('modalSaveBtn').textContent = 'Add Entry';
+  document.getElementById('entryModalOverlay').classList.add('open');
+  setTimeout(() => document.getElementById('modalHours').focus(), 100);
+}
+
+function openEditModal(catId, entryId) {
+  const cat = categories.find(c => c.id === catId);
+  const entry = data[catId].find(e => e.id === entryId);
+  if (!entry) return;
+  entryModalState = { mode: 'edit', catId, entryId };
+  document.getElementById('modalTitle').textContent = 'Edit Entry';
+  document.getElementById('modalSubtitle').textContent = cat.name;
+  document.getElementById('modalDot').style.background = cat.color;
+  document.getElementById('modalDate').value = entry.date;
+  document.getElementById('modalHours').value = entry.hours;
+  document.getElementById('modalDesc').value = entry.desc || '';
+  document.getElementById('modalSaveBtn').textContent = 'Save Changes';
+  document.getElementById('entryModalOverlay').classList.add('open');
+  setTimeout(() => document.getElementById('modalHours').focus(), 100);
+}
+
+function closeEntryModal() { document.getElementById('entryModalOverlay').classList.remove('open'); }
+
+function saveEntryModal() {
+  const date = document.getElementById('modalDate').value;
+  const hours = parseFloat(document.getElementById('modalHours').value);
+  const desc = document.getElementById('modalDesc').value.trim();
+  if (!date) { document.getElementById('modalDate').focus(); return; }
+  if (!hours || hours <= 0) { document.getElementById('modalHours').focus(); return; }
+
+  const { mode, catId, entryId } = entryModalState;
+  if (mode === 'add') {
+    data[catId].push({ id: generateId(), date, hours, desc });
+    showToast('Entry added');
+  } else {
+    const entry = data[catId].find(e => e.id === entryId);
+    if (entry) { entry.date = date; entry.hours = hours; entry.desc = desc; }
+    showToast('Entry updated');
+  }
+  data[catId].sort((a,b) => a.date.localeCompare(b.date));
+  saveData(); renderCategory(catId); updateTotalBadge(); closeEntryModal();
+}
+
+function deleteEntry(catId, entryId) {
+  data[catId] = data[catId].filter(e => e.id !== entryId);
+  saveData(); renderCategory(catId); updateTotalBadge();
+  showToast('Entry deleted');
+}
+
+// ── Manage categories modal ──
+function openManageModal() {
+  document.getElementById('manageModalOverlay').classList.add('open');
+  renderCatList();
+  setTimeout(() => document.getElementById('newCatInput').focus(), 100);
+}
+
+function closeManageModal() {
+  openColorPicker = null;
+  document.getElementById('manageModalOverlay').classList.remove('open');
+  saveCategories(); saveData(); renderAll();
+}
+
+function renderCatList() {
+  const list = document.getElementById('catList');
+  const entryCount = (id) => (data[id]||[]).length;
+
+  list.innerHTML = categories.map((cat, i) => `
+    <div class="cat-list-item" data-idx="${i}">
+      <div class="cat-list-dot" style="background:${cat.color}" onclick="toggleColorPicker(${i}, event)" title="Change color">
+      </div>
+      <input class="cat-list-name" value="${escapeHtml(cat.name)}" onchange="renameCategory(${i}, this.value)" spellcheck="false">
+      <span class="cat-list-count">${entryCount(cat.id)} entries</span>
+      <button class="cat-list-btn" onclick="moveCat(${i}, -1)" title="Move up"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg></button>
+      <button class="cat-list-btn" onclick="moveCat(${i}, 1)" title="Move down"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
+      <button class="cat-list-btn del" onclick="deleteCategory(${i})" title="Delete category"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg></button>
+    </div>
+  `).join('');
+}
+
+function renameCategory(idx, newName) {
+  newName = newName.trim();
+  if (!newName) { renderCatList(); return; }
+  categories[idx].name = newName;
+  saveCategories();
+}
+
+function deleteCategory(idx) {
+  const cat = categories[idx];
+  const count = (data[cat.id]||[]).length;
+  const msg = count > 0
+    ? `Delete "${cat.name}"? This will also delete its ${count} entries. This cannot be undone.`
+    : `Delete "${cat.name}"?`;
+  if (!confirm(msg)) return;
+  delete data[cat.id];
+  categories.splice(idx, 1);
+  saveCategories(); saveData(); renderCatList();
+  showToast('Category deleted');
+}
+
+function moveCat(idx, dir) {
+  const newIdx = idx + dir;
+  if (newIdx < 0 || newIdx >= categories.length) return;
+  [categories[idx], categories[newIdx]] = [categories[newIdx], categories[idx]];
+  saveCategories(); renderCatList();
+}
+
+function addCategory() {
+  const input = document.getElementById('newCatInput');
+  const name = input.value.trim();
+  if (!name) { input.focus(); return; }
+
+  const id = generateId();
+  const usedColors = categories.map(c => c.color);
+  const color = COLOR_PALETTE.find(c => !usedColors.includes(c)) || COLOR_PALETTE[Math.floor(Math.random() * COLOR_PALETTE.length)];
+
+  categories.push({ id, name, color });
+  data[id] = [];
+  saveCategories(); saveData();
+  input.value = '';
+  renderCatList();
+  showToast('Category added');
+}
+
+function toggleColorPicker(idx, event) {
+  event.stopPropagation();
+  const dot = event.currentTarget;
+
+  // Close if already open for this index
+  if (openColorPicker === idx) {
+    const existing = dot.querySelector('.color-picker-popup');
+    if (existing) existing.remove();
+    openColorPicker = null;
+    return;
+  }
+
+  // Close any existing
+  document.querySelectorAll('.color-picker-popup').forEach(el => el.remove());
+  openColorPicker = idx;
+
+  const popup = document.createElement('div');
+  popup.className = 'color-picker-popup';
+  popup.onclick = (e) => e.stopPropagation();
+
+  COLOR_PALETTE.forEach(color => {
+    const swatch = document.createElement('div');
+    swatch.className = 'color-swatch' + (categories[idx].color === color ? ' active' : '');
+    swatch.style.background = color;
+    swatch.onclick = () => {
+      categories[idx].color = color;
+      saveCategories();
+      popup.remove();
+      openColorPicker = null;
+      renderCatList();
+    };
+    popup.appendChild(swatch);
+  });
+
+  dot.style.position = 'relative';
+  dot.appendChild(popup);
+}
+
+// Close color picker on outside click
+document.addEventListener('click', () => {
+  if (openColorPicker !== null) {
+    document.querySelectorAll('.color-picker-popup').forEach(el => el.remove());
+    openColorPicker = null;
+  }
+});
+
+// ── Keyboard shortcuts ──
+document.addEventListener('keydown', e => {
+  const entryOpen = document.getElementById('entryModalOverlay').classList.contains('open');
+  const manageOpen = document.getElementById('manageModalOverlay').classList.contains('open');
+
+  if (e.key === 'Escape') {
+    if (entryOpen) closeEntryModal();
+    else if (manageOpen) closeManageModal();
+  }
+  if (e.key === 'Enter' && entryOpen && e.target.tagName !== 'TEXTAREA') saveEntryModal();
+  if (e.key === 'Enter' && manageOpen && e.target.id === 'newCatInput') addCategory();
+});
+
+// ── Rendering ──
+function renderCategory(catId) {
+  const cat = categories.find(c => c.id === catId);
+  const row = document.getElementById(`row-${catId}`);
+  if (!row || !cat) return;
+  const entries = data[catId] || [];
+  const totalHrs = getCatHours(catId);
+
+  row.querySelector('.cat-hours').innerHTML = entries.length > 0 ? `<strong>${fmtHours(totalHrs)}</strong> hrs &middot; ${entries.length} entries` : '';
+
+  const wrap = row.querySelector('.entries-wrap');
+  if (entries.length === 0) {
+    wrap.style.display = 'none';
+    wrap.innerHTML = '';
+    return;
+  }
+
+  wrap.style.display = '';
+  let html = `<table class="entries-table"><thead><tr>
+    <th>Date</th><th>Hours</th><th>Description</th><th></th>
+  </tr></thead><tbody>`;
+  entries.forEach(entry => {
+    html += `<tr>
+      <td class="date-cell">${formatDate(entry.date)}</td>
+      <td class="hours-cell">${fmtHours(entry.hours)}</td>
+      <td class="desc-cell">${escapeHtml(entry.desc).replace(/\n/g, '<br>')}</td>
+      <td class="actions-cell">
+        <button class="btn-icon" onclick="openEditModal('${catId}','${entry.id}')" title="Edit"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg></button>
+        <button class="btn-icon delete" onclick="deleteEntry('${catId}','${entry.id}')" title="Delete"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg></button>
+      </td>
+    </tr>`;
+  });
+  html += `</tbody></table>`;
+  wrap.innerHTML = html;
+}
+
+function renderAll() {
+  const container = document.getElementById('categories');
+  container.innerHTML = '';
+  categories.forEach(cat => {
+    const entries = data[cat.id] || [];
+    const totalHrs = getCatHours(cat.id);
+    const row = document.createElement('div');
+    row.className = 'category-row';
+    row.id = `row-${cat.id}`;
+    row.innerHTML = `
+      <div class="category-header">
+        <div class="category-header-left">
+          <div class="cat-dot" style="background:${cat.color}"></div>
+          <span class="category-name">${escapeHtml(cat.name)}</span>
+        </div>
+        <div class="category-header-right">
+          <span class="cat-hours">${entries.length > 0 ? `<strong>${fmtHours(totalHrs)}</strong> hrs &middot; ${entries.length} entries` : ''}</span>
+          <button class="btn-add-entry" onclick="openAddModal('${cat.id}')">+ Add</button>
+        </div>
+      </div>
+      <div class="entries-wrap"></div>
+    `;
+    container.appendChild(row);
+    renderCategory(cat.id);
+  });
+  updateTotalBadge();
+}
+
+function clearAll() {
+  if (!confirm('Clear ALL entries across all categories? This cannot be undone.')) return;
+  categories.forEach(c => { data[c.id] = []; });
+  saveData(); renderAll(); showToast('All data cleared');
+}
+
+function copyAll() {
+  let lines = [];
+  let hasData = false;
+  categories.forEach(cat => {
+    const entries = data[cat.id] || [];
+    if (entries.length === 0) return;
+    hasData = true;
+    lines.push(cat.name);
+    entries.forEach(e => {
+      lines.push(`${formatDate(e.date)} - ${fmtHours(e.hours)} - ${e.desc || ''}`);
+    });
+    lines.push(`Total: ${fmtHours(getCatHours(cat.id))} hrs`);
+    lines.push('');
+  });
+  if (!hasData) { showToast('No data to copy'); return; }
+  const text = lines.join('\n').trimEnd();
+  navigator.clipboard.writeText(text).then(() => {
+    showToast('Copied to clipboard');
+  }).catch(() => {
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    showToast('Copied to clipboard');
+  });
+}
+
+loadCategories(); loadData(); renderAll();
+</script>
+</body>
+</html>
